@@ -2,13 +2,12 @@
 
 import cbpro, datetime, numpy, time
  
-##################################################################
 
 currency = input('Please enter the coin you would like to trade: '+ '') + '-USD'
 
 pairA = input('Please confirm your choice'+'')
 pairB = 'USD'
-##################################################################
+
 def authorized():
    apiKey = 'your api key here'
    apiSecret = 'your api secret here'
@@ -22,8 +21,15 @@ def getAccountId(cur):
    for account in x:
     if account['currency'] == cur:
      return account['id']
+    
 pairIdA = getAccountId(currency[:3])# Get the currency's specific ID
 pairIdB = getAccountId(pairB[:3])# Get the currency's specific ID
+
+def getBuyPower():
+    bp = float(auth_client.get_account(pairIdB)['available']) 
+    buyingPower = round(bp-1,2)
+    return buyingPower
+buyingPower = getBuyPower()
 
 def getPrice():
     try:
@@ -31,11 +37,10 @@ def getPrice():
         currentPrice = float(productTicker['price'])
         return currentPrice
     except:
-        print('Something may have gone wrong with credentials or you may have a typo in the coin you chose')
+        pass
 
 
-
-
+currentPrice = float(getPrice())
 
 def coppockSignal():
 
@@ -64,15 +69,12 @@ def coppockSignal():
     else:
         signal = False
     return signal
+
+
 signal = coppockSignal()
 
-##################################################################
-
-'''productTicker = auth_client.get_product_ticker(product_id=currency)
-currentPrice = float(productTicker['price'])'''
-currentPrice = float(getPrice())
-print(currentPrice)
 fee = 0.011
+
 sellingPowerStart  = float(auth_client.get_account(pairIdA)['available'])
 buyingPowerStart  = float(auth_client.get_account(pairIdB)['available']) - 1
 
@@ -81,58 +83,40 @@ sellValue = float(sellingPower * currentPrice)
 
 
 
-bp = float(auth_client.get_account(pairIdB)['available']) 
-buyingPower = round(bp-1,2)
+
 buyValue = float(buyingPower/currentPrice)
 
 
 soldAt = currentPrice + (currentPrice*fee)
 boughtAt = currentPrice - (currentPrice*fee)
 startPrice = currentPrice
-
-
-totalValueCrypto = float(buyValue + sellingPower)
-totalValueDollar = float(sellValue + buyingPower)
-
-'''print('--------starting balances--------------')
-print('Avalabile:', pairA, 'quantity:', sellingPowerStart)
-print(pairA, 'Value:', pairA ,sellValue)
-print(pairB, 'Balance:', buyingPowerStart)
-print(currency,'Price:', startPrice)
-print('---------------------------------------', '\n')'''
-
-
-
-
-iteration = 1
 tradeCount = 0
+iteration = 1
+
+
 trade = True
 firstTrade = True
 while trade == True:
 
     totalValueCrypto = float(buyValue + sellingPower)
     totalValueDollar = float(sellValue + buyingPower)
-
-    time.sleep(1)
     sellingPower  = float(auth_client.get_account(pairIdA)['available'])
-    bp = float(auth_client.get_account(pairIdB)['available']) - 1
-    buyingPower = round(bp-1,2)
+
+
+    
     time.sleep(1) 
     now = datetime.datetime.now()
     today = (now.strftime('%m/%d/%y'))
     timestamp = (now.strftime('%H:%M '))
     minimumSellPrice = float(boughtAt + (boughtAt * fee))
     maximumBuyPrice = float(soldAt - (soldAt * fee))
-#########################################################################################
+
     try:
         coppockSignal()
-        print(coppockSignal())
     except:
-        pass
+        print('error with coppockSignal()')
     
-##################################################################
-    
-##################################################################
+
     time.sleep(1)
 
     
@@ -176,11 +160,10 @@ while trade == True:
         print(iteration,'sell!',timestamp, currentPrice, sellingPower, buyingPower)
     print(timestamp, firstTrade, signal, '|',buy, sell,'|', getPrice(), sellingPower, buyingPower)
 
-######################################################################################### 
-   
     
     iteration = iteration + 1
     
     
 
     time.sleep(60)
+
