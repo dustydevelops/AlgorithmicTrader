@@ -22,54 +22,84 @@ def getAccountId(cur):
     if account['currency'] == cur:
      return account['id']
     
-pairIdA = getAccountId(currency[:3])# Get the currency's specific ID
-pairIdB = getAccountId(pairB[:3])# Get the currency's specific ID
-
 def getBuyPower():
     bp = float(auth_client.get_account(pairIdB)['available']) 
     buyingPower = round(bp-1,2)
     return buyingPower
-buyingPower = getBuyPower()
 
 def getPrice():
-    try:
-        productTicker = auth_client.get_product_ticker(product_id=currency)
-        currentPrice = float(productTicker['price'])
-        return currentPrice
-    except:
-        pass
 
+    productTicker = auth_client.get_product_ticker(product_id=currency)
+    currentPrice = float(productTicker['price'])
+    return currentPrice
+def determineConditions():
 
-currentPrice = float(getPrice())
+    coinToDollar = getPrice * sellingPower
+    dollarToCoin = valueC = buyingValue/getPrice
+        
+    
+    print(coinToDollar,dollarToCoin)
 
-def coppockSignal():
-
-    historicData = auth_client.get_product_historic_rates(currency, granularity=300)
-    historicRates = numpy.squeeze(numpy.asarray(numpy.matrix(historicData)[:,4]))
-    ROC11 = numpy.zeros(13)
-    ROC14 = numpy.zeros(13)
-    ROCSUM = numpy.zeros(13)
-    for ii in range(0,13):
-        ROC11[ii] = (100*(historicRates[ii]-historicRates[ii+11]) / float(historicRates[ii+11]))
-        ROC14[ii] = (100*(historicRates[ii]-historicRates[ii+14]) / float(historicRates[ii+14]))
-        ROCSUM[ii] = ( ROC11[ii] + ROC14[ii] )
-    coppock = numpy.zeros(4)
-    for ll in range(0,4):
-        coppock[ll] = (((1*ROCSUM[ll+9]) + (2*ROCSUM[ll+8]) + (3*ROCSUM[ll+7]) \
-        + (4*ROCSUM[ll+6]) + (5*ROCSUM[ll+5]) + (6*ROCSUM[ll+4]) \
-        + (7*ROCSUM[ll+3]) + (8*ROCSUM[ll+2]) + (9*ROCSUM[ll+1]) \
-        + (10*ROCSUM[ll])) / float(55))
-    coppockD1 = numpy.zeros(3)
-    for mm in range(3):
-        coppockD1[mm] = coppock[mm] - coppock[mm+1]
-    coppockOut = ((coppockD1[0]/abs(coppockD1[0]) , coppockD1[1]/abs(coppockD1[1])))
-
-    if (coppockD1[0]/abs(coppockD1[0])) == -1.0 and (coppockD1[1]/abs(coppockD1[1])) == 1.0:
-        signal = True
+def determineBuy():
+    if getPrice() < startPrice:
+        buy = True
     else:
-        signal = False
-    return signal
+        buy = False
+    return buy
 
+def determineSell():
+    if getPrice() > startPrice:
+        sell = True
+    else:
+        sell = False
+    return sell
+
+        
+def coppockSignal():
+    try:
+        historicData = auth_client.get_product_historic_rates(currency, granularity=300)
+        historicRates = numpy.squeeze(numpy.asarray(numpy.matrix(historicData)[:,4]))
+        ROC11 = numpy.zeros(13)
+        ROC14 = numpy.zeros(13)
+        ROCSUM = numpy.zeros(13)
+        for ii in range(0,13):
+            ROC11[ii] = (100*(historicRates[ii]-historicRates[ii+11]) / float(historicRates[ii+11]))
+            ROC14[ii] = (100*(historicRates[ii]-historicRates[ii+14]) / float(historicRates[ii+14]))
+            ROCSUM[ii] = ( ROC11[ii] + ROC14[ii] )
+        coppock = numpy.zeros(4)
+        for ll in range(0,4):
+            coppock[ll] = (((1*ROCSUM[ll+9]) + (2*ROCSUM[ll+8]) + (3*ROCSUM[ll+7]) \
+            + (4*ROCSUM[ll+6]) + (5*ROCSUM[ll+5]) + (6*ROCSUM[ll+4]) \
+            + (7*ROCSUM[ll+3]) + (8*ROCSUM[ll+2]) + (9*ROCSUM[ll+1]) \
+            + (10*ROCSUM[ll])) / float(55))
+        coppockD1 = numpy.zeros(3)
+        for mm in range(3):
+            coppockD1[mm] = coppock[mm] - coppock[mm+1]
+        coppockOut = ((coppockD1[0]/abs(coppockD1[0]) , coppockD1[1]/abs(coppockD1[1])))
+
+        if (coppockD1[0]/abs(coppockD1[0])) == -1.0 and (coppockD1[1]/abs(coppockD1[1])) == 1.0:
+            signal = True
+        else:
+            signal = False
+        return signal
+    except:
+        print('coppockSignal() error')
+    
+
+currency = input('Please enter the coin you would like to trade: '+ '') + '-USD'
+pairA = input('Please enter your coin choice again to confirm: '+'')
+pairB = 'USD'
+
+auth_client = authorized()
+
+startPrice = getPrice()
+
+
+pairIdA = getAccountId(currency[:3])# Get the currency's specific ID
+pairIdB = getAccountId(pairB[:3])# Get the currency's specific ID
+
+currentPrice = getPrice()
+buyingPower = getBuyPower()
 
 signal = coppockSignal()
 
@@ -110,22 +140,17 @@ while trade == True:
     timestamp = (now.strftime('%H:%M '))
     minimumSellPrice = float(boughtAt + (boughtAt * fee))
     maximumBuyPrice = float(soldAt - (soldAt * fee))
+    buy = determineBuy()
+    sell = determineSell()
+    coppockSignal()
 
-    try:
-        coppockSignal()
-    except:
-        print('error with coppockSignal()')
-    
 
-    time.sleep(1)
-
-    
-    if firstTrade == False and signal == True and trade == True and buyingPower > 10 and currentPrice < maximumBuyPrice:
+    if firstTrade == False and signal == True and trade == True and buyingPower > 1 and currentPrice < maximumBuyPrice:
         buy = True
         funding = float(buyingPower)            
     else:
         buy = False
-    if firstTrade == False and signal == True and (sellingPower > 1)  and (currentPrice > minimumSellPrice)  :
+    if firstTrade == False and signal == True and sellingPower > 1 and (currentPrice > minimumSellPrice)  :
         sell = True
         funding = float(sellingPower)
     else: 
@@ -158,12 +183,10 @@ while trade == True:
         firstTrade = False
 
         print(iteration,'sell!',timestamp, currentPrice, sellingPower, buyingPower)
-    print(timestamp, firstTrade, signal, '|',buy, sell,'|', getPrice(), sellingPower, buyingPower)
+    print('firstTrade:', firstTrade, 'signal :', signal,'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
 
     
     iteration = iteration + 1
-    
-    
 
-    time.sleep(60)
+    time.sleep(30)
 
