@@ -41,7 +41,12 @@ def determineConditions():
     print(coinToDollar,dollarToCoin)
 
 def determineBuy():
-    if getPrice() < startPrice:
+    a = getPrice() < startPrice
+    b = buyingPower/currentPrice > sellingPowerStart
+    if firstTrade == True and a == True:
+   
+        buy = True
+    if firstTrade == False and a == True and b == True:
         buy = True
     else:
         buy = False
@@ -149,6 +154,7 @@ while trade == True:
         signal = False
   
 
+    print(iteration,'firstTrade:', firstTrade, 'signal :', signal,'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
 
 
     if determineBuy() == True and sell == False and signal == True and trade == True :
@@ -165,11 +171,6 @@ while trade == True:
         print(iteration,'sell!',timestamp, getPrice(), sellingPower, buyingPower)
         firstTrade = False
 
-    print(iteration,'firstTrade:', firstTrade, 'signal :', signal,'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
-
+    
     iteration = iteration + 1
     
-    
-
-    time.sleep(30)
-
