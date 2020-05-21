@@ -63,8 +63,7 @@ def determineSell():
     
 
 currency = input('Please enter the coin you would like to trade: '+ '') + '-USD'
-pairA = input('Please enter your coin choice again to confirm: '+'')
-pairB = 'USD'
+
 
 auth_client = authorized()
 
@@ -72,7 +71,7 @@ startPrice = getPrice()
 currentPrice = getPrice()
 
 pairIdA = getAccountId(currency[:3])# Get the currency's specific ID
-pairIdB = getAccountId(pairB[:3])# Get the currency's specific ID
+pairIdB = getAccountId('USD'[:3])# Get the currency's specific ID
 
 
 buyingPower = getBuyPower()
@@ -173,4 +172,5 @@ while trade == True:
 
     
     iteration = iteration + 1
-    
+
+    time.sleep(30)
