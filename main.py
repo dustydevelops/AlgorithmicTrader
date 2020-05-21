@@ -54,36 +54,7 @@ def determineSell():
         sell = False
     return sell
 
-        
-def coppockSignal():
-    try:
-        historicData = auth_client.get_product_historic_rates(currency, granularity=300)
-        historicRates = numpy.squeeze(numpy.asarray(numpy.matrix(historicData)[:,4]))
-        ROC11 = numpy.zeros(13)
-        ROC14 = numpy.zeros(13)
-        ROCSUM = numpy.zeros(13)
-        for ii in range(0,13):
-            ROC11[ii] = (100*(historicRates[ii]-historicRates[ii+11]) / float(historicRates[ii+11]))
-            ROC14[ii] = (100*(historicRates[ii]-historicRates[ii+14]) / float(historicRates[ii+14]))
-            ROCSUM[ii] = ( ROC11[ii] + ROC14[ii] )
-        coppock = numpy.zeros(4)
-        for ll in range(0,4):
-            coppock[ll] = (((1*ROCSUM[ll+9]) + (2*ROCSUM[ll+8]) + (3*ROCSUM[ll+7]) \
-            + (4*ROCSUM[ll+6]) + (5*ROCSUM[ll+5]) + (6*ROCSUM[ll+4]) \
-            + (7*ROCSUM[ll+3]) + (8*ROCSUM[ll+2]) + (9*ROCSUM[ll+1]) \
-            + (10*ROCSUM[ll])) / float(55))
-        coppockD1 = numpy.zeros(3)
-        for mm in range(3):
-            coppockD1[mm] = coppock[mm] - coppock[mm+1]
-        coppockOut = ((coppockD1[0]/abs(coppockD1[0]) , coppockD1[1]/abs(coppockD1[1])))
 
-        if (coppockD1[0]/abs(coppockD1[0])) == -1.0 and (coppockD1[1]/abs(coppockD1[1])) == 1.0:
-            signal = True
-        else:
-            signal = False
-        return signal
-    except:
-        print('coppockSignal() error')
     
 
 currency = input('Please enter the coin you would like to trade: '+ '') + '-USD'
@@ -93,15 +64,15 @@ pairB = 'USD'
 auth_client = authorized()
 
 startPrice = getPrice()
-
+currentPrice = getPrice()
 
 pairIdA = getAccountId(currency[:3])# Get the currency's specific ID
 pairIdB = getAccountId(pairB[:3])# Get the currency's specific ID
 
-currentPrice = getPrice()
+
 buyingPower = getBuyPower()
 
-signal = coppockSignal()
+
 
 fee = 0.011
 
@@ -140,53 +111,65 @@ while trade == True:
     timestamp = (now.strftime('%H:%M '))
     minimumSellPrice = float(boughtAt + (boughtAt * fee))
     maximumBuyPrice = float(soldAt - (soldAt * fee))
-    buy = determineBuy()
     sell = determineSell()
-    coppockSignal()
+    
+            
 
+  
+    candle = 300
+    historicData = auth_client.get_product_historic_rates(currency, granularity=candle)
+    historicRates = numpy.squeeze(numpy.asarray(numpy.matrix(historicData)[:,4]))
 
-    if firstTrade == False and signal == True and trade == True and buyingPower > 1 and currentPrice < maximumBuyPrice:
-        buy = True
-        funding = float(buyingPower)            
+# Use the 11th and 14th price back to calculate rate of change. they all = numpy.zeoros(13) but they are not the same. do not alter.
+    ROC11 = numpy.zeros(13)
+    ROC14 = numpy.zeros(13)
+    ROCSUM = numpy.zeros(13)
+        
+    for ii in range(0,13):
+        ROC11[ii] = (100*(historicRates[ii]-historicRates[ii+11]) / float(historicRates[ii+11]))
+        ROC14[ii] = (100*(historicRates[ii]-historicRates[ii+14]) / float(historicRates[ii+14]))
+        ROCSUM[ii] = ( ROC11[ii] + ROC14[ii] )
+# Calculate the past 4 values from coppock using a weighted moving Average.
+
+        time.sleep(1)
+    coppock = numpy.zeros(4)
+    for ll in range(0,4):
+        coppock[ll] = (((1*ROCSUM[ll+9]) + (2*ROCSUM[ll+8]) + (3*ROCSUM[ll+7]) \
+        + (4*ROCSUM[ll+6]) + (5*ROCSUM[ll+5]) + (6*ROCSUM[ll+4]) \
+        + (7*ROCSUM[ll+3]) + (8*ROCSUM[ll+2]) + (9*ROCSUM[ll+1]) \
+        + (10*ROCSUM[ll])) / float(55))
+# Calculate last 3 derivatives from coppock.
+    coppockD1 = numpy.zeros(3)
+    for mm in range(3):
+        coppockD1[mm] = coppock[mm] - coppock[mm+1]
+    if (coppockD1[0]/abs(coppockD1[0])) == -1.0 and (coppockD1[1]/abs(coppockD1[1])) == 1.0:
+        signal = True
+
     else:
-        buy = False
-    if firstTrade == False and signal == True and sellingPower > 1 and (currentPrice > minimumSellPrice)  :
-        sell = True
-        funding = float(sellingPower)
-    else: 
-        sell = False
-                
-    if buy == True and sell == False and signal == True and trade == True :
-        auth_client.place_market_order(product_id=currency, side='buy', funds=str(funding))
+        signal = False
+  
+
+
+
+    if determineBuy() == True and sell == False and signal == True and trade == True :
+        #auth_client.place_market_order(product_id=currency, side='buy', funds=str(funding))
 
         boughtAt = currentPrice
         print(iteration,'buy!',timestamp, currentPrice, sellingPower, buyingPower)
-
-    if sell == True and buy == False and signal == True and trade == True :
-        auth_client.place_market_order(product_id=currency,side='sell',size=str(funding))
+        firstTrade = False
+        
+    if sell == True and determineBuy() == False and signal == True and trade == True :
+        #auth_client.place_market_order(product_id=currency,side='sell',size=str(funding))
 
         soldAt = currentPrice
         print(iteration,'sell!',timestamp, getPrice(), sellingPower, buyingPower)
-        
-                        
-    if firstTrade == True and (buyingPower > 5) and signal == True and trade == True and (currentPrice < startPrice):
-            
-        auth_client.place_market_order(product_id=currency, side='buy', funds=str(buyingPower))
-        boughtAt = currentPrice
         firstTrade = False
 
-        print(iteration,'buy!',timestamp, currentPrice, sellingPower, buyingPower)
-       
-    if firstTrade == True and (sellingPower * currentPrice > 5) and signal == True and trade == True and (currentPrice > startPrice):
-        auth_client.place_market_order(product_id=currency,side='sell',size=str(sellingPower))
-        soldAt = currentPrice
-        firstTrade = False
+    print(iteration,'firstTrade:', firstTrade, 'signal :', signal,'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
 
-        print(iteration,'sell!',timestamp, currentPrice, sellingPower, buyingPower)
-    print('firstTrade:', firstTrade, 'signal :', signal,'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
-
-    
     iteration = iteration + 1
+    
+    
 
     time.sleep(30)
 
