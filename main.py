@@ -2,19 +2,13 @@
 
 import cbpro, datetime, numpy, time
  
-
-currency = input('Please enter the coin you would like to trade: '+ '') + '-USD'
-
-pairA = input('Please confirm your choice'+'')
-pairB = 'USD'
-
 def authorized():
    apiKey = 'your api key here'
    apiSecret = 'your api secret here'
    passphrase = 'passphrase goes here'
     auth_client = cbpro.AuthenticatedClient(apiKey,apiSecret,passphrase)
     return auth_client
-auth_client = authorized()
+
 
 def getAccountId(cur):
    x = auth_client.get_accounts()
@@ -32,34 +26,35 @@ def getPrice():
     productTicker = auth_client.get_product_ticker(product_id=currency)
     currentPrice = float(productTicker['price'])
     return currentPrice
-def determineConditions():
 
-    coinToDollar = getPrice * sellingPower
-    dollarToCoin = valueC = buyingValue/getPrice
-        
-    
-    print(coinToDollar,dollarToCoin)
 
 def determineBuy():
-    a = getPrice() < startPrice
-    b = buyingPower/currentPrice > sellingPowerStart
-    if firstTrade == True and a == True:
-   
-        buy = True
-    if firstTrade == False and a == True and b == True:
+
+  
+
+    if firstTrade == True and (getPrice() < startPrice) == True:
         buy = True
     else:
-        buy = False
+
+        b = (buyingPower - (buyingPower * 0.0011)) / getPrice() > sellingPowerStart
+        if firstTrade == False and (getPrice() < startPrice) == True and b == True:
+            buy = True
+        else:
+            buy = False
     return buy
 
+
 def determineSell():
-    if getPrice() > startPrice:
+
+
+    if firstTrade == True and getPrice() > startPrice == True:
         sell = True
     else:
-        sell = False
+        if firstTrade == False and getPrice() > startPrice == True and (sellingPower + (sellingPower * 0.0011)) * getPrice() > buyingPowerStart == True:
+            sell = True
+        else:
+            sell = False
     return sell
-
-
     
 
 currency = input('Please enter the coin you would like to trade: '+ '') + '-USD'
@@ -67,58 +62,35 @@ currency = input('Please enter the coin you would like to trade: '+ '') + '-USD'
 
 auth_client = authorized()
 
-startPrice = getPrice()
-currentPrice = getPrice()
+
 
 pairIdA = getAccountId(currency[:3])# Get the currency's specific ID
 pairIdB = getAccountId('USD'[:3])# Get the currency's specific ID
 
 
-buyingPower = getBuyPower()
-
-
-
-fee = 0.011
+startPrice = getPrice()
 
 sellingPowerStart  = float(auth_client.get_account(pairIdA)['available'])
-buyingPowerStart  = float(auth_client.get_account(pairIdB)['available']) - 1
-
-sellingPower  = float(auth_client.get_account(pairIdA)['available'])
-sellValue = float(sellingPower * currentPrice)
+buyingPowerStart  = getBuyPower()
 
 
-
-
-buyValue = float(buyingPower/currentPrice)
-
-
-soldAt = currentPrice + (currentPrice*fee)
-boughtAt = currentPrice - (currentPrice*fee)
-startPrice = currentPrice
 tradeCount = 0
 iteration = 1
 
 
 trade = True
 firstTrade = True
+
 while trade == True:
 
-    totalValueCrypto = float(buyValue + sellingPower)
-    totalValueDollar = float(sellValue + buyingPower)
-    sellingPower  = float(auth_client.get_account(pairIdA)['available'])
-
+    buyingPower = getBuyPower()
+    sellingPower  = float(auth_client.get_account(pairIdA)['available'])  
 
     
     time.sleep(1) 
     now = datetime.datetime.now()
     today = (now.strftime('%m/%d/%y'))
     timestamp = (now.strftime('%H:%M '))
-    minimumSellPrice = float(boughtAt + (boughtAt * fee))
-    maximumBuyPrice = float(soldAt - (soldAt * fee))
-    sell = determineSell()
-    
-            
-
   
     candle = 300
     historicData = auth_client.get_product_historic_rates(currency, granularity=candle)
@@ -156,21 +128,20 @@ while trade == True:
     print(iteration,'firstTrade:', firstTrade, 'signal :', signal,'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
 
 
-    if determineBuy() == True and sell == False and signal == True and trade == True :
+    if determineBuy() == True and signal == True :
         #auth_client.place_market_order(product_id=currency, side='buy', funds=str(funding))
 
         boughtAt = currentPrice
         print(iteration,'buy!',timestamp, currentPrice, sellingPower, buyingPower)
         firstTrade = False
         
-    if sell == True and determineBuy() == False and signal == True and trade == True :
+    if determineSell() == True and signal == True :
         #auth_client.place_market_order(product_id=currency,side='sell',size=str(funding))
 
         soldAt = currentPrice
-        print(iteration,'sell!',timestamp, getPrice(), sellingPower, buyingPower)
+        print(iteration,'sell!',timestamp, getPrice(), float(sellingPower), buyingPower)
         firstTrade = False
 
     
     iteration = iteration + 1
-
     time.sleep(30)
