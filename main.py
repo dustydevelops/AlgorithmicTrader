@@ -9,63 +9,75 @@ def authorized():
     auth_client = cbpro.AuthenticatedClient(apiKey,apiSecret,passphrase)
     return auth_client
 
-tradeCount = 0
-iteration = 1
 
 def getCurrencyInput():
-   x = input('Please enter the coin you would like to trade: '+ '') + '-USD'
-   return x
+ x = input('Please enter the coin you would like to trade: '+ '') + '-USD'
+ return x
 currency = getCurrencyInput()
 
 def getAccountId(cur):
-   x = auth_client.get_accounts()
-   for account in x:
-    if account['currency'] == cur:
-     return account['id']
+ x = auth_client.get_accounts()
+ for account in x:
+  if account['currency'] == cur:
+   return account['id']
+
 pairIdA = getAccountId(currency[:3])# Get the currency's specific ID
 pairIdB = getAccountId('USD'[:3])# Get the currency's specific ID
 
 def getBuyPower():
-    bp = float(auth_client.get_account(pairIdB)['available']) 
-    buyingPower = round(bp-1,2)
-    return buyingPower
+ bp = float(auth_client.get_account(pairIdB)['available']) 
+ buyingPower = round(bp-1,2)
+ return buyingPower
 
 def getSellPower():
-    sellingPower = float(auth_client.get_account(pairIdA)['available'])
-    return sellingPower
+ sellingPower = float(auth_client.get_account(pairIdA)['available'])
+ return sellingPower
     
 
 def getPrice():
-    productTicker = auth_client.get_product_ticker(product_id=currency)
-    currentPrice = float(productTicker['price'])
-    return currentPrice
+ productTicker = auth_client.get_product_ticker(product_id=currency)
+ currentPrice = float(productTicker['price'])
+ return currentPrice
 
 
 def determineBuy():
-    if firstTrade == True and (getPrice() < startPrice) == True:
-        buy = True
-    else:
-
-        if firstTrade == False and (getPrice() < (lastSell - (lastSell * 0.005))) == True:
-            buy = True
-        else:
-            buy = False
-    return buy
-
+ if firstTrade == True and (getPrice() < startPrice) == True:
+  buy = True
+ else:
+  if firstTrade == False and (getPrice() < (lastSell - (lastSell * 0.005))) == True:
+   buy = True
+  else:
+   buy = False
+ return buy
 
 def determineSell():
-    if firstTrade == True and (getPrice() > startPrice) == True:
-        sell = True
-    else:
-        if firstTrade == False and (getPrice() > (lastBuy + (lastBuy * 0.005))) == True:
-            sell = True
-        else:
-            sell = False
-    return sell
+ if firstTrade == True and (getPrice() > startPrice) == True:
+  sell = True
+ else:
+   if firstTrade == False and (getPrice() > (lastBuy + (lastBuy * 0.005))) == True:
+    sell = True
+   else:
+    sell = False
+ return sell
 
+def placeBuy():
 
+ if determineBuy() == True and getCoppockSignal() == True :
+  #auth_client.place_market_order(product_id=currency, side='buy', funds=str(funding))
+  lastBuy = getPrice()
+  firstTrade = False
+  print(iteration,'buy!',timestamp, lastBuy, sellingPower, buyingPower)
+  time.sleep(300)
+  
+def placeSell():
+ 
+ if determineSell() == True and getCoppockSignal() == True :
+  #auth_client.place_market_order(product_id=currency,side='sell',size=str(funding))
+  firstTrade = False
+  lastSell = getPrice()
+  print(iteration,'sell!',timestamp, lastSell, float(sellingPower), buyingPower)
+  time.sleep(300)
 def getCoppockSignal():
-    candle = 300
     historicData = auth_client.get_product_historic_rates(currency, granularity=candle)
     historicRates = numpy.squeeze(numpy.asarray(numpy.matrix(historicData)[:,4]))
     ROC11 = numpy.zeros(13)
@@ -100,38 +112,30 @@ startPrice = getPrice()
 sellingPowerStart  = getSellPower()
 buyingPowerStart  = getBuyPower()
 lastBuy = getPrice()
-
+lastSell = getPrice()
 
 trade = True
 firstTrade = True
 
+candle = 300
+
+tradeCount = 0
+iteration = 1
+
 while trade == True:
 
-    buyingPower = getBuyPower()
-    sellingPower  = getSellPower()  
+ buyingPower = getBuyPower()
+ sellingPower  = getSellPower()  
 
-    now = datetime.datetime.now()
-    today = (now.strftime('%m/%d/%y'))
-    timestamp = (now.strftime('%H:%M '))
+ now = datetime.datetime.now()
+ timestamp = (now.strftime('%H:%M '))
 
-
-    if determineBuy() == True and getCoppockSignal() == True :
-        #auth_client.place_market_order(product_id=currency, side='buy', funds=str(funding))
-        print(iteration,'buy!',timestamp, lastBuy, sellingPower, buyingPower)
-
-        lastBuy = getPrice()
-        firstTrade = False
-    
-        
-        
-    if determineSell() == True and getCoppockSignal() == True :
-        #auth_client.place_market_order(product_id=currency,side='sell',size=str(funding))
-        firstTrade = False
-
-        lastSell = getPrice()
-        print(iteration,'sell!',timestamp, lastSell, float(sellingPower), buyingPower)
-    print(iteration,'firstTrade:', firstTrade, 'signal :',getCoppockSignal(),'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
+ placeBuy()
+ placeSell()
+ 
+ print(iteration,'firstTrade:', firstTrade, 'signal :',getCoppockSignal(),'determineBuy():',determineBuy(),'determineSell() :',determineSell(),'startPrice:', startPrice, 'getPrice:', getPrice(),'sellingPower', sellingPower,'buyingPower', buyingPower)
 
     
-    iteration = iteration + 1
-    time.sleep(30)
+ iteration = iteration + 1
+ time.sleep(300)
+
