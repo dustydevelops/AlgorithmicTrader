@@ -46,56 +46,61 @@ soldLast = None
 trade = True
 tradeCount = 0
 iteration = 0
-
+sell = True
+buy = True
 while trade == True:
   
 # STEP 10 - Count a new iteration define fee(desired gain), price, funding, portfolio value, and running total of profit 
   
     iteration += 1
-    fee = (0.01)
+    fee = (0.0055)
     price = float(auth_client.get_product_ticker(product_id=currency)['price'])
-    x = float(auth_client.get_account(account(coin[:3]))['available'])
-    owned = round(x-(x*0.25),2)
+    x  = float(auth_client.get_account(account(coin[:3]))['available'])
+    owned = int(x)
     y = float(auth_client.get_account(account(fiat[:3]))['available'])
-    funding = round(y-1,2)
-    currentValue = float(y + (x * price))
+    funding = int(y)
+    currentValue = float(y + (owned * price))
     profit = round((currentValue - startingValue),5)
+    desiredBuy = float(lastSell - (lastSell * fee))
+    desiredSell = float(lastBuy + (lastBuy * fee))
+    buySignal = (price < desiredBuy)
+    sellSignal = (price > desiredSell)
+# STEP 11 - Place a market sell order if the onditions are met, then tell me, update soldlast variable, turn sell off and buy on, count the new trade.
     
-# STEP 11 - Place a market sell order if the onditions are met, then tell me, update soldlast variable, count the new trade.
-    
-    if (price > lastBuy + (lastBuy * fee)):
-        if soldLast == False or None:
-            auth_client.place_market_order(product_id = currency, side='sell', size = str(owned))
-            lastSell =  float(auth_client.get_product_ticker(product_id=currency)['price'])
-            print('sell!')
-            soldLast = True
-            tradeCount += 1
+    if sellSignal == True and sell == True:
+      auth_client.place_market_order(product_id = currency, side='sell', size = str(owned))
+      lastSell =  float(auth_client.get_product_ticker(product_id=currency)['price'])
+      print('sell!')
+      tradeCount += 1
+      sell = False
+      buy = True
             
-# STEP 12 - Place a market buy order if the onditions are met, then tell me, update soldlast variable, count the new trade.
+# STEP 12 - Place a market buy order if the onditions are met, then tell me, update soldlast variable,turn buy off and sell on, count the new trade.
 
-    if (price < lastBuy - (lastBuy * fee)):
-        if soldLast == True or None:
-            auth_client.place_market_order(product_id = currency, side='buy', funds = str(funding))
-            lastBuy =  float(auth_client.get_product_ticker(product_id=currency)['price'])
-            print('buy!')
-            soldLast = False
-            tradeCount += 1
+    if buySignal == True and buy == True:
+      auth_client.place_market_order(product_id = currency, side='buy', funds = str(funding))
+      lastBuy =  float(auth_client.get_product_ticker(product_id=currency)['price'])
+      print('buy!')
+      tradeCount += 1
+      sell = True
+      buy = False
             
 # STEP 13 - Tell me all about everything
 
     print(currency,
-          'dollar:', y,
-          'coin:', x,
-          'starting value:',startingValue,
-          'current value:', currentValue,
-          'profit:', profit,
-          'last sell', lastSell,
-          'desired buy:',(lastBuy - (lastBuy * fee)),
+          iteration,
+          fiat,':', funding,
+          coin,':', owned,
           'price:', price,
           'lastBuy:',lastBuy,
-          'desiredSell:',(lastBuy + (lastBuy * fee)),
-          'tradeCount:', tradeCount,
-          'iteration', iteration)
+          'lastSell', lastSell,
+          'tradeCount:', tradeCount,          
+          'buySignal:', buySignal,
+          'sellSignal:', sellSignal,
+          'startingValue:',startingValue,
+          'currentValue:', currentValue,
+          'profit:', profit
+          )
     
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
