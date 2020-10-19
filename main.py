@@ -14,11 +14,19 @@ auth_client = cbpro.AuthenticatedClient(apiKey,apiSecret,passphrase)
 
 # STEP 3 -  Pick a pair to trade 
 
-coin = input('Coin:'+'')
-fiat = input('Fiat:'+'')
+coin = input('      Enter coin :'+'').upper()
+fiat = input('      Enter native currency:'+'').upper()
 currency = (coin+'-'+fiat)
 
+print('                                                                     ')
+print('          You have chosen to buy and sell', coin,'using',fiat    )
+print('                                                                     ')
+print('            An automated trade session of this pair will now begin.')
+print('                                                                     ')
+print('   --------------------------------------------------------------------   ')
+
 #  STEP 4 - Get the ID's for the chosen pair 
+
 
 def account(iD):
  for account in auth_client.get_accounts():
@@ -124,20 +132,17 @@ while trade == True:
             
 # STEP 13 - Tell me all about everything
 
-    print(currency,
-          iteration,
-          fiat,':', funding,
-          coin,':', owned,
-          '| desiredBuy:', desiredBuy,
-          '| desiredSell:',desiredSell,
-          '| price:', price,
-          '| lastBuy:',lastBuy,
-          '| lastSell', lastSell,
-          '| BUY:', buy, '| SELL:', sell,
+    print(
+          iteration, 
           '| tradeCount:', tradeCount,          
           '| buySignal:', buySignal,
           '| sellSignal:', sellSignal,
           '| coppockSignal:', (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0,
+          fiat,':', funding,
+          coin,':', x,
+          '| desiredBuy:', desiredBuy,
+          '| price:', price,
+          '| desiredSell:',desiredSell,
           '| startingValue:',startingValue,
           '| currentValue:', currentValue,
           '| profit:', profit
@@ -145,4 +150,5 @@ while trade == True:
     
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
-    time.sleep(10)
+    time.sleep(15)
+
