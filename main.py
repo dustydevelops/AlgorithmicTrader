@@ -36,11 +36,11 @@ startingValue = float(startingDollar + (startingCoin * startingPrice))
 
 #  STEP 7 - Set the prices to later distinguish high from low and make profitable trades.
 
-lastBuy = startingPrice
-lastSell = startingPrice
-# we start looking to buy or sell, turn of later to prevent double sell.
+lastBuy = (startingPrice - (startingPrice * 0.01))
+lastSell = (startingPrice + (startingPrice * 0.01))
+# we start looking to buy, .
 
-sell = True
+sell = False
 buy = True
 
 # STEP 9 - Iinitaite the loop, start iteration count, and trade count, begin loop.
@@ -131,4 +131,3 @@ while trade == True:
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
     time.sleep(15)
-
