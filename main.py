@@ -12,19 +12,11 @@ apiSecret = 'your api secret here'
 passphrase = 'passphrase goes here'
 auth_client = cbpro.AuthenticatedClient(apiKey,apiSecret,passphrase)
 
-# STEP 3 -  Pick a pair to trade 
+# STEP 3 -  Pick a pair to trade
 
 coin = input('      Enter coin :'+'').upper()
 fiat = input('      Enter native currency:'+'').upper()
 currency = (coin+'-'+fiat)
-
-print('                                                                     ')
-print('          You have chosen to buy and sell', coin,'using',fiat    )
-print('                                                                     ')
-print('            An automated trade session of this pair will now begin.')
-print('                                                                     ')
-print('   --------------------------------------------------------------------   ')
-
 #  STEP 4 - Get the ID's for the chosen pair 
 
 
@@ -54,7 +46,7 @@ buy = True
 # STEP 9 - Iinitaite the loop, start iteration count, and trade count, begin loop.
 
 trade = True
-tradeCount = 0
+trdCnt = 0
 iteration = 0
 
 while trade == True:
@@ -66,6 +58,8 @@ while trade == True:
     price = float(auth_client.get_product_ticker(product_id=currency)['price'])
     x  = float(auth_client.get_account(account(coin[:3]))['available'])
     owned = int(x)
+    xx = (x - (x*0.0001))
+    sellDat= round((xx),6)
     y = float(auth_client.get_account(account(fiat[:3]))['available'])
     funding = int(y)
     currentValue = float(y + (x * price))
@@ -113,40 +107,26 @@ while trade == True:
         coppockD1[mm] = coppock[mm] - coppock[mm+1]
 
     if sellSignal == True and sell == True and (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0:
-      auth_client.place_market_order(product_id = currency, side='sell', size = str(owned))
+      print(auth_client.place_market_order(product_id = currency, side='sell', size = str(sellDat)))
       lastSell =  float(auth_client.get_product_ticker(product_id=currency)['price'])
-      print('sell!')
-      tradeCount += 1
+      
+      trdCnt += 1
       sell = False
       buy = True
             
 # STEP 12 - Place a market buy order if the onditions are met, then tell me, update soldlast variable,turn buy off and sell on, count the new trade.
 
     if buySignal == True and buy == True and (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0:
-      auth_client.place_market_order(product_id = currency, side='buy', funds = str(funding))
+      print(auth_client.place_market_order(product_id = currency, side='buy', funds = str(funding)))
       lastBuy =  float(auth_client.get_product_ticker(product_id=currency)['price'])
-      print('buy!')
-      tradeCount += 1
+      
+      trdCnt += 1
       sell = True
       buy = False
             
 # STEP 13 - Tell me all about everything
 
-    print(
-          iteration, 
-          '| tradeCount:', tradeCount,          
-          '| buySignal:', buySignal,
-          '| sellSignal:', sellSignal,
-          '| coppockSignal:', (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0,
-          fiat,':', funding,
-          coin,':', x,
-          '| desiredBuy:', desiredBuy,
-          '| price:', price,
-          '| desiredSell:',desiredSell,
-          '| startingValue:',startingValue,
-          '| currentValue:', currentValue,
-          '| profit:', profit
-          )
+    print(iteration, '|trades:', trdCnt,'|bet:', desiredBuy,'|price:', price,'|ditch:',desiredSell,'|had:',startingValue,'|have:', currentValue,'|earned:', profit)
     
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
