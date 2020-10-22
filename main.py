@@ -14,9 +14,10 @@ auth_client = cbpro.AuthenticatedClient(apiKey,apiSecret,passphrase)
 
 # STEP 3 -  Pick a pair to trade
 
-coin = input('      Enter coin :'+'').upper()
+coin = input('      Enter coin :(xtz recommended'+'').upper()
 fiat = input('      Enter native currency:'+'').upper()
 currency = (coin+'-'+fiat)
+nerdStats = input('      NerdStats? yes or no:'+'').upper()
 #  STEP 4 - Get the ID's for the chosen pair 
 
 
@@ -39,9 +40,13 @@ startingValue = float(startingDollar + (startingCoin * startingPrice))
 lastBuy = (startingPrice - (startingPrice * 0.01))
 lastSell = (startingPrice + (startingPrice * 0.01))
 # we start looking to buy, .
+if (startingDollar > 10):
+  buy = True
+  sell = False
+if (startingCoin * startingPrice > 10):
+  buy = False
+  sell = True
 
-sell = False
-buy = True
 
 # STEP 9 - Iinitaite the loop, start iteration count, and trade count, begin loop.
 
@@ -106,7 +111,15 @@ while trade == True:
     for mm in range(3):
         coppockD1[mm] = coppock[mm] - coppock[mm+1]
 
-    if sellSignal == True and sell == True and (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0:
+
+      
+    if (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0:
+      signal = True
+    else:
+      signal = False
+      
+
+    if signal == True and sellSignal == True and sell == True:
       print(auth_client.place_market_order(product_id = currency, side='sell', size = str(sellDat)))
       lastSell =  float(auth_client.get_product_ticker(product_id=currency)['price'])
       
@@ -116,19 +129,30 @@ while trade == True:
             
 # STEP 12 - Place a market buy order if the onditions are met, then tell me, update soldlast variable,turn buy off and sell on, count the new trade.
 
-    if buySignal == True and buy == True and (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0:
+    if signal == True and  buySignal == True and buy == True:
       print(auth_client.place_market_order(product_id = currency, side='buy', funds = str(funding)))
       lastBuy =  float(auth_client.get_product_ticker(product_id=currency)['price'])
       
       trdCnt += 1
       sell = True
       buy = False
+
             
 # STEP 13 - Tell me all about everything
+    if nerdStats == str( 'YES'):
+        print(iteration,
+            '|trades:', trdCnt,
+            '|bet:', desiredBuy,
+            '|price:', price,
+            '|ditch:',desiredSell,
+            '|had:',startingValue,'|have:',
+            currentValue,coin,owned,fiat,funding,'|earned:',
+            profit, 'sell:',sell,
+            'buy:',buy,
+            'decision:',signal)
 
-    print(iteration, '|trades:', trdCnt,'|bet:', desiredBuy,'|price:', price,'|ditch:',desiredSell,'|had:',startingValue,'|have:', currentValue,'|earned:', profit)
-    
+    if nerdStats == str( 'NO' ):
+      print(iteration)
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
     time.sleep(15)
-
