@@ -152,7 +152,7 @@ while trade == True:
             'decision:',signal)
 
     if nerdStats == str( 'NO' ):
-      print(iteration)
+      print(iteration, profit)
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
     time.sleep(15)
