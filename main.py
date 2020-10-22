@@ -59,7 +59,7 @@ while trade == True:
     x  = float(auth_client.get_account(account(coin[:3]))['available'])
     owned = int(x)
     xx = (x - (x*0.0001))
-    sellDat= round((xx),6)
+    sellDat= round((xx),2)
     y = float(auth_client.get_account(account(fiat[:3]))['available'])
     funding = int(y)
     currentValue = float(y + (x * price))
@@ -131,3 +131,4 @@ while trade == True:
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
     time.sleep(15)
+
