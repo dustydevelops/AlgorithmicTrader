@@ -14,13 +14,12 @@ auth_client = cbpro.AuthenticatedClient(apiKey,apiSecret,passphrase)
 
 # STEP 3 -  Pick a pair to trade
 
-coin = input('      Enter coin (xtz recommended :'+'').upper()
+coin = input('      Enter coin (xtz recommended):'+'').upper()
 fiat = input('      Enter native currency:'+'').upper()
 currency = (coin+'-'+fiat)
 granularity = input('      granularity (60,300,900,3600):'+'')
 gran = int(granularity)
 nerdStats = input('      NerdStats? yes or no:'+'').upper()
-
 
 #  STEP 4 - Get the ID's for the chosen pair 
 
@@ -30,7 +29,7 @@ def account(iD):
    return account['id']
 
 # STEP 5 - Get the chosen pair's current price
-
+time.sleep(1)
 startingPrice = float(auth_client.get_product_ticker(product_id=currency)['price'])
 
 # STEP 6 - Get the chosen pair's current balances
@@ -84,7 +83,7 @@ while trade == True:
     p = np.squeeze(np.asarray(np.matrix(historicData)[:,4]))
 
         # Wait for 1 second, to avoid API limit
-    time.sleep(1)
+    time.sleep(3)
 
         # Get latest data and show to the user for reference
     newData = auth_client.get_product_ticker(product_id=currency)
@@ -151,7 +150,7 @@ while trade == True:
             '|had:',startingValue,
             '|have:',currentValue,
             '|earned:',profit,
-            '|balances:',owned,fiat,funding,
+            '|balances:',coin,owned,fiat,funding,
             '|decision making: buy-', buy,
               'sell-',sell,'execute-',signal,'\n')
 
@@ -160,3 +159,4 @@ while trade == True:
 # STEP 14 - Take a few seconds to breathe, then do it again.
     
     time.sleep(15)
+    
