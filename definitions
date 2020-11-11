@@ -1,0 +1,61 @@
+
+import cbpro, time, numpy as np
+from apiShit import auth_client
+from itertools import count, islice
+#################################################################################
+
+def account(iD):
+ for account in auth_client.get_accounts():
+  if account['currency'] == iD:
+   return account['id']
+
+def getPrice():
+ price = auth_client.get_product_ticker(product_id=currency)['price']
+ return price
+
+def getBalance():
+ usdBalance = float(auth_client.get_account(account('USD'[:3]))['available'])
+ return usdBalance
+
+def lastFillPrice():
+ fills_gen = auth_client.get_fills(currency)
+ all_fills = list(fills_gen)
+ fill = (all_fills[0]['price'])
+ return fill
+
+def lastFillSide():
+ fills_gen = auth_client.get_fills(currency)
+ all_fills = list(fills_gen)
+ i = (all_fills[0][ 'side'] == 'buy')
+ if i == True:
+  side = 'Bought'
+ elif i == False:
+   side = 'Sold'
+ return side
+
+def lastFillSize():
+ fills_gen = auth_client.get_fills(currency)
+ all_fills = list(fills_gen)
+ size = (all_fills[0]['size'])
+ return size
+
+def lastFillFee():
+ fills_gen = auth_client.get_fills(currency)
+ all_fills = list(fills_gen)
+ fee = (all_fills[0]['fee'])
+ return fee
+
+def lastFillFee():
+ fills_gen = auth_client.get_fills(currency)
+ all_fills = list(fills_gen)
+ fee = float(all_fills[0]['fee'])
+ return fee
+
+def lastFillVol():
+ fills_gen = auth_client.get_fills(currency)
+ all_fills = list(fills_gen)
+ fee = float(all_fills[0]['usd_volume'])
+ return fee 
+currency ='BTC-USD'
+
+print(lastFillSide(),lastFillSize(),currency,'@',lastFillPrice(),'fee:',lastFillFee(),'total:',lastFillVol())
