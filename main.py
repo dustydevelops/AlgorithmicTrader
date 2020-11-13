@@ -33,7 +33,8 @@ def lastFillSide():
  elif i == False:
    side = 'Sold'
  return side
-time.sleep(1)
+
+
 # Get the chosen pair's current price
 startingPrice = float(auth_client.get_product_ticker(product_id=currency)['price'])
 
@@ -130,9 +131,8 @@ try:
           time.sleep(30)
         
       else:
-      
         signal = False
-        if nerdStats == str( 'YES'):
+      if nerdStats == str( 'YES'):
             print('\n',iteration,
                 'trades:', trdCnt,
                 '|bet:', desiredBuy,
@@ -145,10 +145,10 @@ try:
                 '|decision making: buy-', buy,
                 'sell-',sell,'execute-',signal,'\n')
 
-        if nerdStats == str( 'NO' ):
+      if nerdStats == str( 'NO' ):
           continue
 
-  time.sleep(15)
+      time.sleep(30)
 
 except Exception as e:
    print(e)
