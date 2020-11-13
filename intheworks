@@ -1,7 +1,6 @@
 import cbpro, time, numpy as np
 from apiShit import auth_client
 
-
 def account(iD):
  for account in auth_client.get_accounts():
   if account['currency'] == iD:
@@ -13,7 +12,7 @@ def strategy():
  xx = (x - (x*0.0001))
  sellDat= round((xx),6)
  y = float(auth_client.get_account(account('USD'[:3]))['available'])
- funding = int(y)
+ funding = int(20.00)
  fills_gen = auth_client.get_fills(currency)
  all_fills = list(fills_gen)
  fill = (all_fills[0])
