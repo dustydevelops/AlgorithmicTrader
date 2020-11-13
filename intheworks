@@ -1,0 +1,100 @@
+import cbpro, time, numpy as np
+from apiShit import auth_client
+
+
+def account(iD):
+ for account in auth_client.get_accounts():
+  if account['currency'] == iD:
+   return account['id']
+  
+def strategy():
+ 
+ owned = int(x)
+ xx = (x - (x*0.0001))
+ sellDat= round((xx),6)
+ y = float(auth_client.get_account(account('USD'[:3]))['available'])
+ funding = int(y)
+ fills_gen = auth_client.get_fills(currency)
+ all_fills = list(fills_gen)
+ fill = (all_fills[0])
+ fillPrice = float(fill['price'])
+ size = float(fill['size'])
+ side = (fill[ 'side'] == 'buy')
+ price = float(auth_client.get_product_ticker(product_id=currency)['price'])
+ fee = float(0.005)
+ desiredBuy = float(fillPrice - (fillPrice * fee))
+ desiredSell = float(fillPrice + (fillPrice * fee))
+ buySignal = (price < desiredBuy)
+ sellSignal = (price > desiredSell)
+
+ if side == False and buySignal == True:
+  decisionBuy = True
+  decisionSell = False
+  calculate = True
+ if side == True and sellSignal == True:
+  decisionSell = True
+  decisionBuy = False
+  calculate = True
+ else:
+  calculate = False
+  decisionBuy = False
+  decisionSell = False
+  signal = None
+  
+ if calculate == True:
+      historicData = auth_client.get_product_historic_rates(currency, granularity=300)
+      # Make an array of the historic price data from the matrix
+      p = np.squeeze(np.asarray(np.matrix(historicData)[:,4]))
+      # Calculate the rate of change 11 and 14 units back, then sum them
+      ROC11 = np.zeros(13)
+      ROC14 = np.zeros(13)
+      ROCSUM = np.zeros(13)
+      for ii in range(0,13):
+          ROC11[ii] = (100*(p[ii]-p[ii+11]) / float(p[ii+11]))
+          ROC14[ii] = (100*(p[ii]-p[ii+14]) / float(p[ii+14]))
+          ROCSUM[ii] = ( ROC11[ii] + ROC14[ii] )
+      # Calculate the past 4 Coppock values with Weighted Moving Average
+      coppock = np.zeros(4)
+      for ll in range(0,4):
+          coppock[ll] = (((1*ROCSUM[ll+9]) + (2*ROCSUM[ll+8]) + (3*ROCSUM[ll+7]) \
+          + (4*ROCSUM[ll+6]) + (5*ROCSUM[ll+5]) + (6*ROCSUM[ll+4]) \
+          + (7*ROCSUM[ll+3]) + (8*ROCSUM[ll+2]) + (9*ROCSUM[ll+1]) \
+          + (10*ROCSUM[ll])) / float(55))
+      # Calculate the past 3 derivatives of the Coppock Curve
+      coppockD1 = np.zeros(3)
+      for mm in range(3):
+          coppockD1[mm] = coppock[mm] - coppock[mm+1]
+      if (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0:
+         signal = True
+      else: signal = False
+ if decisionBuy and signal == True:
+    print(auth_client.place_market_order(product_id = currency, side='buy', funds = str(funding)))
+
+ if decisionSell and signal == True:
+    print(auth_client.place_market_order(product_id = currency, side='sell', funds = str(sellDat)))
+ print(currency, fillPrice, price, decisionBuy, decisionSell,calculate,signal) 
+currencies = ['BTC-USD','ETH-USD','LTC-USD']
+while True:
+ try:
+
+
+
+   
+     currency = currencies[0]
+     x  = float(auth_client.get_account(account('BTC'[:3]))['available'])
+     strategy()
+       
+
+     currency = currencies[1]
+     x  = float(auth_client.get_account(account('BTC'[:3]))['available'])
+     strategy()
+
+     currency = currencies[2]
+     x  = float(auth_client.get_account(account('BTC'[:3]))['available'])
+     strategy()     
+
+
+  
+ except Exception as e:
+  print(e)
+
