@@ -1,0 +1,5 @@
+import cbpro
+#replace api key, secret phrase, and passphrase with the corresponding credentials you aquire from coinbase pro
+auth_client = cbpro.AuthenticatedClient('api key',
+'secret phrase',
+' passphrase ')
